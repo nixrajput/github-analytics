@@ -12,6 +12,9 @@
 /.next/
 /out/
 
+# bolt
+/.bolt/
+
 # production
 /build
 
