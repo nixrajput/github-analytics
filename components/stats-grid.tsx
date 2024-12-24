@@ -112,7 +112,7 @@ export function StatsGrid({
     },
     {
       label: "Total Streaks",
-      value: engagement.totalStreaks,
+      value: `${engagement.totalStreaks} days`,
       icon: Trophy,
     },
     {
