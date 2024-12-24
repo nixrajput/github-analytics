@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Star, GitFork, FolderCode } from "lucide-react";
+import { Star, GitFork } from "lucide-react";
 import { Badge } from "./ui/badge";
 import type { Repository } from "@/lib/types";
 

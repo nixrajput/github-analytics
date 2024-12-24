@@ -6,8 +6,8 @@ export function generateMarkdown(stats: GitHubStats): string {
 
 ## 📊 Profile Overview
 - **Username:** [@${stats.user.login}](https://github.com/${stats.user.login})
-- **Followers:** ${stats.user.followers}
-- **Following:** ${stats.user.following}
+- **Followers:** ${stats.user.followers.totalCount}
+- **Following:** ${stats.user.following.totalCount}
 - **Total Repositories:** ${stats.user.repositories.totalCount}
 
 ## 🏆 Contribution Statistics
@@ -21,12 +21,13 @@ export function generateMarkdown(stats: GitHubStats): string {
 ## 🔥 Streak Statistics
 - **Current Streak:** ${stats.engagement.currentStreak} days
 - **Longest Streak:** ${stats.engagement.longestStreak} days
+- **Total Streak:** ${stats.engagement.totalStreaks} days
 
 ## 📈 Language Distribution
 ${stats.languages
   .map((lang) => `- ${lang.name}: ${lang.percentage.toFixed(1)}%`)
   .join("\n")}
 
-*Generated with [GitHub Analytics Dashboard](https://github.com/your-username/github-analytics)*
+*Generated with [GitHub Analytics Dashboard](https://github.com/nixrajput/github-analytics)*
 `.trim();
 }

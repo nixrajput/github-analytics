@@ -12,6 +12,7 @@ import { CopyButton } from "@/components/copy-button";
 import { Search, Loader2 } from "lucide-react";
 import { LanguageChart } from "@/components/language-chart";
 import { RepositoryCard } from "@/components/repository-card";
+import { TimeRange } from "@/lib/types";
 
 export default function Home() {
   const router = useRouter();
@@ -19,11 +20,11 @@ export default function Home() {
 
   // Initialize state from URL params
   const [username, setUsername] = useState(
-    searchParams.get("username") || "nixrajput"
+    searchParams.get("username") ||
+      (process.env.NEXT_PUBLIC_GITHUB_USERNAME as string)
   );
-  const [timeRange, setTimeRange] = useState<"current-year" | "all-time">(
-    (searchParams.get("timeRange") as "current-year" | "all-time") ||
-      "current-year"
+  const [timeRange, setTimeRange] = useState<TimeRange>(
+    (searchParams.get("timeRange") as TimeRange) || "current-year"
   );
 
   const { data, isLoading, isFetching, isError, error, refetch } =
@@ -77,14 +78,18 @@ export default function Home() {
           disabled={isLoading || isFetching}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <TimeRangeToggle value={timeRange} onChange={handleTimeRangeChange} />
-        <Button type="submit" disabled={isLoading}>
+        <TimeRangeToggle
+          value={timeRange}
+          onChange={handleTimeRangeChange}
+          disabled={isLoading || isFetching}
+        />
+        <Button type="submit" disabled={isLoading || isFetching}>
           {isLoading || isFetching ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Search className="mr-2 h-4 w-4" />
           )}
-          {isLoading || isFetching ? "Loading..." : "Fetch Data"}
+          {isLoading || isFetching ? "Loading..." : "Search"}
         </Button>
       </form>
 
