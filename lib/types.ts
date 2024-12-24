@@ -80,3 +80,5 @@ export interface GitHubStats {
   languages: LanguageStats[];
   engagement: GitHubEngagement;
 }
+
+export type TimeRange = "current-year" | "all-time";
