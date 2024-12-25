@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGitHubData } from "@/hooks/use-github-data";
 import { Input } from "@/components/ui/input";
