@@ -17,6 +17,12 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    # Dummy build-time env so steps like `next build` that read env at build
+    # succeed in CI (same approach as portfolio-nextjs). Add this repo's
+    # build-time vars here with placeholder values.
+    env:
+      CI: "true"
+      NEXT_PUBLIC_GITHUB_TOKEN: dummy-token-for-build
     steps:
       - uses: actions/checkout@v6
         with:
