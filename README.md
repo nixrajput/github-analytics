@@ -33,6 +33,7 @@ GitHub Analytics Dashboard is a web application that provides insights into your
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
   - [Usage](#usage)
+  - [GitHub App setup](#github-app-setup)
   - [Deployment](#deployment)
   - [Contributing](#contributing)
   - [License](#license)
@@ -41,6 +42,7 @@ GitHub Analytics Dashboard is a web application that provides insights into your
 
 ## Features
 
+- Sign in with GitHub. Every request to GitHub uses the visitor's own token.
 - View your GitHub profile information.
 - Display your repositories, commits, pull requests, and issues.
 - Filter repositories by type (public, private, forked, archived).
@@ -109,16 +111,22 @@ You need to have the following software installed on your computer:
 
 ## Usage
 
-- Create a `.env.local` file in the root directory of the project and add the following environment variables:
+- Create a GitHub App first (see [GitHub App setup](#github-app-setup)). Then create a `.env.local` file in the project root with these variables:
 
    ```env
+   AUTH_SECRET=your-random-secret
+   AUTH_GITHUB_ID=your-github-app-client-id
+   AUTH_GITHUB_SECRET=your-github-app-client-secret
    NEXT_PUBLIC_GITHUB_USERNAME=your-github-username
-   GITHUB_TOKEN=your-github-access-token
    ```
 
-   Replace the placeholder values with your GitHub username and a GitHub access token. You can create a token by following the instructions in the [GitHub documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Use a fine-grained token with read-only access to public repositories: the dashboard shows data for any username, so a token that can read private repositories also shows them.
+   - `AUTH_SECRET` encrypts the session cookie. Generate one with `openssl rand -base64 33`.
+   - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` are the GitHub App's client ID and client secret.
+   - `NEXT_PUBLIC_GITHUB_USERNAME` is optional. It sets the username that the dashboard shows first.
 
-   Only the server reads `GITHUB_TOKEN` (in `app/api/github/route.ts`). Never give it a `NEXT_PUBLIC_` prefix: Next.js copies every `NEXT_PUBLIC_` variable into the JavaScript that it sends to the browser.
+   Every page except `/sign-in` requires a GitHub sign-in, and `/api/github` answers 401 without one. The visitor's GitHub tokens stay inside the encrypted, HttpOnly session cookie. The browser never receives them, and `/api/auth/session` does not return them. Never give the three `AUTH_` variables a `NEXT_PUBLIC_` prefix: Next.js copies every `NEXT_PUBLIC_` variable into the JavaScript that it sends to the browser.
+
+   If you host the app somewhere other than Vercel, also set `AUTH_TRUST_HOST=true` or `AUTH_URL=https://your-domain`.
 
 - To start the development server and view the website locally, run the following command:
 
@@ -134,11 +142,30 @@ You need to have the following software installed on your computer:
 
    This will start the Next.js development server, and you can access the website in your web browser at `http://localhost:3000`.
 
+## GitHub App setup
+
+The dashboard signs visitors in through a GitHub App that has no permissions. It only reads public data, with each visitor's own user token.
+
+1. Open GitHub **Settings**, then **Developer settings**, then **GitHub Apps**, and click **New GitHub App**.
+2. Enter a name and set **Homepage URL** to `https://github-analytics-dashboard.vercel.app`.
+3. Add both **Callback URLs**:
+   - `https://github-analytics-dashboard.vercel.app/api/auth/callback/github`
+   - `http://localhost:3000/api/auth/callback/github`
+4. Turn on **Expire user authorization tokens**. The app refreshes the 8-hour tokens itself.
+5. Leave **Request user authorization (OAuth) during installation** off.
+6. Under **Webhook**, clear **Active**.
+7. Do not add any permissions. Keep only the default metadata read access, so the App reads public data only.
+8. Under **Where can this GitHub App be installed?**, choose **Any account**. Visitors only authorize the App when they sign in. Nobody needs to install it. GitHub lets only the owner authorize an App set to **Only on this account**, so with that setting nobody else can sign in.
+9. Click **Create GitHub App**. Copy the **Client ID** into `AUTH_GITHUB_ID`.
+10. Click **Generate a new client secret** and copy it into `AUTH_GITHUB_SECRET`. GitHub shows it only once.
+
 ## Deployment
 
 To deploy the dashboard to a hosting service of your choice, follow the deployment instructions for Next.js applications. The dashboard calls GitHub through its own API route, so it needs a host that runs a Next.js server, such as Vercel or Netlify. Static hosts such as GitHub Pages do not work.
 
-Set `GITHUB_TOKEN` (and optionally `NEXT_PUBLIC_GITHUB_USERNAME`) in the host's environment variable settings.
+On Vercel, open the project's **Settings**, then **Environment Variables**. Add `AUTH_SECRET`, `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` for **Production**, then redeploy. Remove `GITHUB_TOKEN` and `NEXT_PUBLIC_GITHUB_TOKEN` if they are still set.
+
+Preview deployments cannot complete the sign-in unless the preview URL's callback (`https://<preview-host>/api/auth/callback/github`) is added to the GitHub App's callback URLs and the three variables are set for **Preview** too. GitHub allows up to 10 callback URLs per App.
 
 ## Contributing
 
