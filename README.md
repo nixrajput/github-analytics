@@ -43,6 +43,7 @@ GitHub Analytics Dashboard is a web application that provides insights into your
 ## Features
 
 - Sign in with GitHub. Every request to GitHub uses the visitor's own token.
+- See your own private repositories and contributions after you install the GitHub App. Other users' stats show public data only.
 - View your GitHub profile information.
 - Display your repositories, commits, pull requests, and issues.
 - Filter repositories by type (public, private, forked, archived).
@@ -117,14 +118,16 @@ You need to have the following software installed on your computer:
    AUTH_SECRET=your-random-secret
    AUTH_GITHUB_ID=your-github-app-client-id
    AUTH_GITHUB_SECRET=your-github-app-client-secret
+   NEXT_PUBLIC_GITHUB_APP_SLUG=your-github-app-slug
    NEXT_PUBLIC_GITHUB_USERNAME=your-github-username
    ```
 
    - `AUTH_SECRET` encrypts the session cookie. Generate one with `openssl rand -base64 33`.
    - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` are the GitHub App's client ID and client secret.
+   - `NEXT_PUBLIC_GITHUB_APP_SLUG` is the App's public slug. It turns on the **Include my private repositories** link.
    - `NEXT_PUBLIC_GITHUB_USERNAME` is optional. It sets the username that the dashboard shows first.
 
-   Every page except `/sign-in` requires a GitHub sign-in, and `/api/github` answers 401 without one. The visitor's GitHub tokens stay inside the encrypted, HttpOnly session cookie. The browser never receives them, and `/api/auth/session` does not return them. Never give the three `AUTH_` variables a `NEXT_PUBLIC_` prefix: Next.js copies every `NEXT_PUBLIC_` variable into the JavaScript that it sends to the browser.
+   Every page except `/sign-in` requires a GitHub sign-in, and `/api/github` answers 401 without one. Every `/api/github` response carries `Cache-Control: private, no-store`, so no shared cache can serve one visitor's data to another. The visitor's GitHub tokens stay inside the encrypted, HttpOnly session cookie. The browser never receives them, and `/api/auth/session` does not return them. Never give the three `AUTH_` variables a `NEXT_PUBLIC_` prefix: Next.js copies every `NEXT_PUBLIC_` variable into the JavaScript that it sends to the browser.
 
    If you host the app somewhere other than Vercel, also set `AUTH_TRUST_HOST=true` or `AUTH_URL=https://your-domain`.
 
@@ -144,7 +147,13 @@ You need to have the following software installed on your computer:
 
 ## GitHub App setup
 
-The dashboard signs visitors in through a GitHub App that has no permissions. It only reads public data, with each visitor's own user token.
+The dashboard signs visitors in through a GitHub App, and every request to GitHub uses the visitor's own user token.
+
+- A visitor who only signs in sees public data.
+- To include their own private repositories, a visitor installs the App on their account and chooses the repositories. The dashboard shows the **Include my private repositories** link for this.
+- Private data appears only in the visitor's own stats. For any other username, the app asks GitHub for public repositories only and removes private and restricted contribution counts. This holds even when the visitor can see that user's private repositories as a collaborator or organization member.
+
+To create the App:
 
 1. Open GitHub **Settings**, then **Developer settings**, then **GitHub Apps**, and click **New GitHub App**.
 2. Enter a name and set **Homepage URL** to `https://github-analytics-dashboard.vercel.app`.
@@ -152,18 +161,24 @@ The dashboard signs visitors in through a GitHub App that has no permissions. It
    - `https://github-analytics-dashboard.vercel.app/api/auth/callback/github`
    - `http://localhost:3000/api/auth/callback/github`
 4. Turn on **Expire user authorization tokens**. The app refreshes the 8-hour tokens itself.
-5. Leave **Request user authorization (OAuth) during installation** off.
+5. Turn on **Request user authorization (OAuth) during installation**, so that installing the App also authorizes it. After the install, GitHub sends the visitor to the callback URL, and the app sends them on to the dashboard.
 6. Under **Webhook**, clear **Active**.
-7. Do not add any permissions. Keep only the default metadata read access, so the App reads public data only.
-8. Under **Where can this GitHub App be installed?**, choose **Any account**. Visitors only authorize the App when they sign in. Nobody needs to install it. GitHub lets only the owner authorize an App set to **Only on this account**, so with that setting nobody else can sign in.
+7. Under **Repository permissions**, set only these, all read-only. Add no write permission and no account or organization permission.
+   - **Metadata: Read-only** (mandatory): lists repositories with their languages, stars, forks and visibility.
+   - **Contents: Read-only**: the language trend reads each repository's commit count.
+   - **Issues: Read-only** and **Pull requests: Read-only**: the engagement stats read issue and pull request times, states and comment counts.
+
+   These permissions apply only to the repositories that a visitor chooses during the install. If the visitor's own stats fail with "Resource not accessible by integration", a permission is missing.
+8. Under **Where can this GitHub App be installed?**, choose **Any account**. GitHub lets only the owner authorize an App set to **Only on this account**, so with that setting nobody else could sign in.
 9. Click **Create GitHub App**. Copy the **Client ID** into `AUTH_GITHUB_ID`.
 10. Click **Generate a new client secret** and copy it into `AUTH_GITHUB_SECRET`. GitHub shows it only once.
+11. Copy the App's slug (the last part of its public URL, `https://github.com/apps/<slug>`) into `NEXT_PUBLIC_GITHUB_APP_SLUG`. The slug is not a secret.
 
 ## Deployment
 
 To deploy the dashboard to a hosting service of your choice, follow the deployment instructions for Next.js applications. The dashboard calls GitHub through its own API route, so it needs a host that runs a Next.js server, such as Vercel or Netlify. Static hosts such as GitHub Pages do not work.
 
-On Vercel, open the project's **Settings**, then **Environment Variables**. Add `AUTH_SECRET`, `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` for **Production**, then redeploy. Remove `GITHUB_TOKEN` and `NEXT_PUBLIC_GITHUB_TOKEN` if they are still set.
+On Vercel, open the project's **Settings**, then **Environment Variables**. Add `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` and `NEXT_PUBLIC_GITHUB_APP_SLUG` for **Production**, then redeploy. Remove `GITHUB_TOKEN` and `NEXT_PUBLIC_GITHUB_TOKEN` if they are still set.
 
 Preview deployments cannot complete the sign-in unless the preview URL's callback (`https://<preview-host>/api/auth/callback/github`) is added to the GitHub App's callback URLs and the three variables are set for **Preview** too. GitHub allows up to 10 callback URLs per App.
 
