@@ -1,5 +1,5 @@
 export const GET_USER_PROFILE = `
-  query GetUserProfile($username: String!) {
+  query GetUserProfile($username: String!, $own: Boolean!, $privacy: RepositoryPrivacy) {
     user(login: $username) {
       name
       login
@@ -15,12 +15,12 @@ export const GET_USER_PROFILE = `
       isDeveloperProgramMember
       isEmployee
       isGitHubStar
-      status {
+      status @include(if: $own) {
         emoji
         emojiHTML
         message
       }
-      organizations(first: 100) {
+      organizations(first: 100) @include(if: $own) {
         nodes {
           avatarUrl
           name
@@ -33,13 +33,13 @@ export const GET_USER_PROFILE = `
       following {
         totalCount
       }
-      repositories {
+      repositories(privacy: $privacy) {
         totalCount
       }
       starredRepositories {
         totalCount
       }
-      sponsors {
+      sponsors @include(if: $own) {
         totalCount
       }
     }
@@ -47,20 +47,37 @@ export const GET_USER_PROFILE = `
 `;
 
 export const GET_USER_CONTRIBUTIONS = `
-  query GetUserContributions($username: String!, $from: DateTime!, $to: DateTime!) {
+  query GetUserContributions($username: String!, $from: DateTime!, $to: DateTime!, $own: Boolean!) {
     user(login: $username) {
       contributionsCollection(from: $from, to: $to) {
         contributionYears
-        restrictedContributionsCount
-        totalCommitContributions
-        totalIssueContributions
-        totalPullRequestContributions
-        totalPullRequestReviewContributions
-        totalRepositoriesWithContributedCommits
-        totalRepositoriesWithContributedIssues
-        totalRepositoriesWithContributedPullRequestReviews
-        totalRepositoriesWithContributedPullRequests
-        totalRepositoryContributions
+        restrictedContributionsCount @include(if: $own)
+        totalCommitContributions @include(if: $own)
+        totalIssueContributions @include(if: $own)
+        totalPullRequestContributions @include(if: $own)
+        totalPullRequestReviewContributions @include(if: $own)
+        totalRepositoriesWithContributedCommits @include(if: $own)
+        totalRepositoriesWithContributedIssues @include(if: $own)
+        totalRepositoriesWithContributedPullRequestReviews @include(if: $own)
+        totalRepositoriesWithContributedPullRequests @include(if: $own)
+        totalRepositoryContributions @include(if: $own)
+        commitContributionsByRepository(maxRepositories: 100) @skip(if: $own) {
+          repository { isPrivate }
+          contributions { totalCount }
+        }
+        issueContributionsByRepository(maxRepositories: 100) @skip(if: $own) {
+          repository { isPrivate }
+          contributions { totalCount }
+        }
+        pullRequestContributionsByRepository(maxRepositories: 100) @skip(if: $own) {
+          repository { isPrivate }
+          contributions { totalCount }
+        }
+        repositoryContributions(first: 100) @skip(if: $own) {
+          nodes {
+            repository { isPrivate }
+          }
+        }
         contributionCalendar {
           totalContributions
           colors
@@ -107,9 +124,9 @@ export const GET_USER_CONTRIBUTIONS = `
 // }
 
 export const GET_USER_REPOSITORIES = `
-  query GetUserRepositories($username: String!, $first: Int!) {
+  query GetUserRepositories($username: String!, $first: Int!, $privacy: RepositoryPrivacy) {
     user(login: $username) {
-      repositories(first: $first, orderBy: {field: STARGAZERS, direction: DESC}) {
+      repositories(first: $first, privacy: $privacy, orderBy: {field: STARGAZERS, direction: DESC}) {
         nodes {
           name
           description
@@ -130,20 +147,7 @@ export const GET_USER_REPOSITORIES = `
             name
             color
           }
-          licenseInfo {
-            name
-            nickname
-          }
           watchers {
-            totalCount
-          }
-          issues(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-            totalCount
-          }
-          pullRequests(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
-            totalCount
-          }
-          releases(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
             totalCount
           }
           languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
@@ -154,9 +158,6 @@ export const GET_USER_REPOSITORIES = `
                 color
               }
             }
-          }
-          collaborators(first: 10, affiliation: ALL) {
-            totalCount
           }
         }
       }
@@ -179,6 +180,8 @@ export const GET_USER_ENGAGEMENT = `
         }
         pullRequestReviewContributions(first: 100) {
           nodes {
+            isRestricted
+            repository { isPrivate }
             pullRequest {
               createdAt
               mergedAt
@@ -193,7 +196,9 @@ export const GET_USER_ENGAGEMENT = `
         }
         issueContributions(first: 100) {
           nodes {
+            isRestricted
             issue {
+              repository { isPrivate }
               createdAt
               closedAt
               state
@@ -209,9 +214,9 @@ export const GET_USER_ENGAGEMENT = `
 `;
 
 export const GET_USER_LANGUAGES = `
-  query GetUserLanguages($username: String!, $first: Int!) {
+  query GetUserLanguages($username: String!, $first: Int!, $privacy: RepositoryPrivacy) {
     user(login: $username) {
-      repositories(first: $first, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      repositories(first: $first, privacy: $privacy, orderBy: {field: UPDATED_AT, direction: DESC}) {
         nodes {
           isPrivate
           languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {

@@ -90,7 +90,7 @@ export function StatsGrid({
     },
     {
       label: "Private Contributions",
-      value: stats.restrictedContributionsCount,
+      value: stats.restrictedContributionsCount ?? "N/A",
       icon: Eye,
     },
     {

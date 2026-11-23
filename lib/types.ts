@@ -25,7 +25,8 @@ export interface ContributionStats {
   totalPullRequestContributions: number;
   totalIssueContributions: number;
   totalRepositoryContributions: number;
-  restrictedContributionsCount: number;
+  // Absent for other users: only the viewer's own stats include private contributions.
+  restrictedContributionsCount?: number;
   totalRepositoriesWithContributedCommits: number;
   contributionCalendar: {
     totalContributions: number;

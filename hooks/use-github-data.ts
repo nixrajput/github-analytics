@@ -59,8 +59,10 @@ function mergeContributionData(contributions: any[]): any {
         (merged.totalRepositoryContributions || 0) +
         current.totalRepositoryContributions,
       restrictedContributionsCount:
-        (merged.restrictedContributionsCount || 0) +
-        current.restrictedContributionsCount,
+        current.restrictedContributionsCount === undefined
+          ? undefined
+          : (merged.restrictedContributionsCount || 0) +
+            current.restrictedContributionsCount,
       totalRepositoriesWithContributedCommits:
         (merged.totalRepositoriesWithContributedCommits || 0) +
         current.totalRepositoriesWithContributedCommits,
@@ -119,6 +121,10 @@ export function useGitHubData(
       if (!username) throw new Error("Username is required");
 
       try {
+        // One session read runs the Auth.js jwt callback, which refreshes an expiring GitHub token.
+        // The parallel /api/github calls below only read the token, so they cannot race on the refresh.
+        await fetch("/api/auth/session");
+
         // First fetch user profile to get account creation date
         const profileResponse: any = await githubQuery("profile", {
           username,
