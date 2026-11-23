@@ -172,6 +172,70 @@ describe('POST /api/github', () => {
     expect(collection).not.toHaveProperty('commitContributionsByRepository');
   });
 
+  // GitHub has no public-only filter for these fields, so the stub returns them
+  // as it would for a token that sees the user's private activity.
+  const withPrivateActivity = () => ({
+    profile: { user: { starredRepositories: { totalCount: 9 } } },
+    contributions: {
+      user: {
+        contributionsCollection: {
+          commitContributionsByRepository: [],
+          issueContributionsByRepository: [],
+          pullRequestContributionsByRepository: [],
+          repositoryContributions: { nodes: [] },
+          contributionCalendar: { totalContributions: 7, weeks: [] },
+        },
+      },
+    },
+    engagement: {
+      user: {
+        contributionsCollection: {
+          contributionCalendar: { totalContributions: 7, weeks: [] },
+          pullRequestReviewContributions: { nodes: [] },
+          issueContributions: { nodes: [] },
+        },
+      },
+    },
+  });
+
+  async function fetchAll(viewerLogin: string) {
+    const results: Record<string, ReturnType<ReturnType<typeof stubGitHub>> & { body: any }> = {};
+    for (const [query, data] of Object.entries(withPrivateActivity())) {
+      const sent = stubGitHub(data);
+      const response = await call(
+        { query, username: 'octocat', from: '2026-01-01T00:00:00Z', to: '2026-02-01T00:00:00Z' },
+        await viewer(viewerLogin)
+      );
+      results[query] = { ...sent(), body: await response.json() };
+    }
+    return results;
+  }
+
+  it('returns the calendar and starred count for the own login', async () => {
+    const { profile, contributions, engagement } = await fetchAll('octocat');
+
+    expect(profile.body.user.starredRepositories).toEqual({ totalCount: 9 });
+    expect(contributions.body.user.contributionsCollection.contributionCalendar).toBeDefined();
+    expect(engagement.body.user.contributionsCollection.contributionCalendar).toBeDefined();
+    expect(engagement.variables).toMatchObject({ own: true });
+  });
+
+  it('never returns the calendar or starred count for another login', async () => {
+    const { profile, contributions, engagement } = await fetchAll('someone-else');
+
+    expect(profile.body.user).not.toHaveProperty('starredRepositories');
+    expect(contributions.body.user.contributionsCollection).not.toHaveProperty(
+      'contributionCalendar'
+    );
+    expect(engagement.body.user.contributionsCollection).not.toHaveProperty(
+      'contributionCalendar'
+    );
+    expect(profile.query).toContain('starredRepositories @include(if: $own)');
+    expect(contributions.query).toContain('contributionCalendar @include(if: $own)');
+    expect(engagement.query).toContain('contributionCalendar @include(if: $own)');
+    expect(engagement.variables).toMatchObject({ own: false });
+  });
+
   it('drops private and restricted engagement for another login', async () => {
     stubGitHub({
       user: {
