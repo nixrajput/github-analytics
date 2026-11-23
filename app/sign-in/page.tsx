@@ -23,8 +23,8 @@ export default async function SignInPage({
         <CardHeader>
           <CardTitle>GitHub Analytics Dashboard</CardTitle>
           <CardDescription>
-            Sign in with GitHub to view statistics. The app reads public data
-            only, with your own GitHub token.
+            Sign in with GitHub to view statistics. Requests use your own
+            GitHub token, and other users&apos; stats show public data only.
           </CardDescription>
         </CardHeader>
         <CardContent>

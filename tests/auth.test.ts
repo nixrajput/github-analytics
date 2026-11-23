@@ -140,3 +140,14 @@ describe('sign-out', () => {
     expect(sessionCookieCleared(response)).toBe(true);
   });
 });
+
+describe('/api/auth/callback/github after an App installation', () => {
+  it('redirects to the dashboard instead of failing the state check', async () => {
+    const { GET } = await import('@/app/api/auth/[...nextauth]/route');
+    const response = await GET(
+      request('/api/auth/callback/github?code=abc&installation_id=42&setup_action=install')
+    );
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/');
+  });
+});

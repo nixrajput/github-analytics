@@ -7,6 +7,8 @@ declare module 'next-auth/jwt' {
     access_token?: string;
     refresh_token?: string;
     expires_at?: number;
+    login?: string;
+    github_id?: number;
   }
 }
 
@@ -18,13 +20,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: '/sign-in' },
   callbacks: {
     authorized: ({ auth }) => !!auth,
-    jwt: ({ token, account }) => {
+    jwt: ({ token, account, profile }) => {
       if (account) {
+        // `profile` is GitHub's /user response for this access token, so it names the viewer.
         return {
           ...token,
           access_token: account.access_token,
           refresh_token: account.refresh_token,
           expires_at: account.expires_at,
+          login: typeof profile?.login === 'string' ? profile.login : undefined,
+          github_id: typeof profile?.id === 'number' ? profile.id : undefined,
         };
       }
       return refreshGitHubToken(token);

@@ -9,11 +9,13 @@ import { TimeRangeToggle } from "@/components/ui/time-range-toggle";
 import { ProfileCard } from "@/components/profile-card";
 import { StatsGrid } from "@/components/stats-grid";
 import { CopyButton } from "@/components/copy-button";
-import { Search, Loader2, LogOut } from "lucide-react";
+import { Search, Loader2, LogOut, Lock } from "lucide-react";
 import { LanguageChart } from "@/components/language-chart";
 import { RepositoryCard } from "@/components/repository-card";
 import { TimeRange } from "@/lib/types";
 import { signOutAction } from "@/app/actions";
+
+const appSlug = process.env.NEXT_PUBLIC_GITHUB_APP_SLUG;
 
 export default function Home() {
   const router = useRouter();
@@ -62,12 +64,24 @@ export default function Home() {
 
   return (
     <main className="container mx-auto p-4 space-y-6">
-      <form action={signOutAction} className="flex justify-end">
-        <Button type="submit" variant="outline" size="sm">
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
-        </Button>
-      </form>
+      <div className="flex justify-end gap-2">
+        {appSlug && (
+          <Button asChild variant="outline" size="sm">
+            <a
+              href={`https://github.com/apps/${encodeURIComponent(appSlug)}/installations/new`}
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Include my private repositories
+            </a>
+          </Button>
+        )}
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline" size="sm">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+        </form>
+      </div>
       <div className="flex flex-col items-center space-y-4">
         <h1 className="text-4xl font-bold">GitHub Analytics Dashboard</h1>
         <p className="text-muted-foreground">

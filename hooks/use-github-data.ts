@@ -59,8 +59,10 @@ function mergeContributionData(contributions: any[]): any {
         (merged.totalRepositoryContributions || 0) +
         current.totalRepositoryContributions,
       restrictedContributionsCount:
-        (merged.restrictedContributionsCount || 0) +
-        current.restrictedContributionsCount,
+        current.restrictedContributionsCount === undefined
+          ? undefined
+          : (merged.restrictedContributionsCount || 0) +
+            current.restrictedContributionsCount,
       totalRepositoriesWithContributedCommits:
         (merged.totalRepositoriesWithContributedCommits || 0) +
         current.totalRepositoriesWithContributedCommits,
