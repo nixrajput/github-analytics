@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -78,5 +77,13 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Tailwind v4 dropped the pointer cursor on buttons; keep the v3 behaviour. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
