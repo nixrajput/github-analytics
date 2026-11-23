@@ -1,22 +1,17 @@
+import 'server-only';
 import { GraphQLClient } from 'graphql-request';
 
-if (!process.env.NEXT_PUBLIC_GITHUB_TOKEN) {
-  throw new Error('NEXT_PUBLIC_GITHUB_TOKEN is not defined');
-}
-
-export const graphqlClient = new GraphQLClient('https://api.github.com/graphql', {
-  headers: {
-    authorization: `Bearer ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}`,
-  },
-});
-
-export async function executeGraphQLQuery<T>(query: string, variables: any): Promise<T> {
-  try {
-    return await graphqlClient.request<T>(query, variables);
-  } catch (error: any) {
-    if (error.response?.errors) {
-      throw new Error(error.response.errors[0].message);
-    }
-    throw error;
+// The token stays on the server: the browser calls app/api/github/route.ts, never GitHub.
+export function executeGraphQLQuery<T>(
+  query: string,
+  variables: Record<string, unknown>
+): Promise<T> {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new Error('GITHUB_TOKEN is not defined');
   }
+
+  return new GraphQLClient('https://api.github.com/graphql', {
+    headers: { authorization: `Bearer ${token}` },
+  }).request<T>(query, variables);
 }
