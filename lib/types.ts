@@ -15,7 +15,8 @@ export interface GitHubUser {
   repositories: {
     totalCount: number;
   };
-  starredRepositories: {
+  // Absent for other users: GitHub can count stars on private repositories the viewer sees.
+  starredRepositories?: {
     totalCount: number;
   };
 }
@@ -28,7 +29,8 @@ export interface ContributionStats {
   // Absent for other users: only the viewer's own stats include private contributions.
   restrictedContributionsCount?: number;
   totalRepositoriesWithContributedCommits: number;
-  contributionCalendar: {
+  // Absent for other users: GitHub can count private activity that the viewer sees.
+  contributionCalendar?: {
     totalContributions: number;
     weeks: {
       contributionDays: {
@@ -63,9 +65,10 @@ export interface LanguageStats {
 }
 
 export interface GitHubEngagement {
-  currentStreak: number;
-  longestStreak: number;
-  totalStreaks: number;
+  // Absent for other users: streaks come from the contribution calendar.
+  currentStreak?: number;
+  longestStreak?: number;
+  totalStreaks?: number;
   totalReviews: number;
   averageReviewTime: string;
   reviewSuccessRate: number;

@@ -26,7 +26,7 @@ export function transformUserProfile(data: any): GitHubUser {
     repositories: {
       totalCount: data.repositories.totalCount,
     },
-    starredRepositories: {
+    starredRepositories: data.starredRepositories && {
       totalCount: data.starredRepositories.totalCount,
     },
   };
@@ -43,7 +43,7 @@ export function transformContributionStats(data: any): ContributionStats {
     restrictedContributionsCount: data.restrictedContributionsCount,
     totalRepositoriesWithContributedCommits:
       data.totalRepositoriesWithContributedCommits,
-    contributionCalendar: {
+    contributionCalendar: data.contributionCalendar && {
       totalContributions: data.contributionCalendar.totalContributions,
       weeks: data.contributionCalendar.weeks.map((week: any) => ({
         contributionDays: week.contributionDays.map((day: any) => ({
@@ -159,10 +159,9 @@ export function transformEngagement(data: any): GitHubEngagement {
   const reviewSuccessRate =
     totalReviews > 0 ? (successfulReviews / totalReviews) * 100 : 0;
 
-  // Calculate streaks
-  const { currentStreak, longestStreak, totalStreaks } = calculateStreaks(
-    data.contributionCalendar.weeks
-  );
+  const streaks = data.contributionCalendar
+    ? calculateStreaks(data.contributionCalendar.weeks)
+    : {};
 
   // Calculate review comments
   const totalReviewsComments = reviews.reduce(
@@ -197,9 +196,7 @@ export function transformEngagement(data: any): GitHubEngagement {
     totalIssues > 0 ? (closedIssues / totalIssues) * 100 : 0;
 
   return {
-    currentStreak,
-    longestStreak,
-    totalStreaks,
+    ...streaks,
     totalReviews,
     averageReviewTime: avgReviewTime,
     reviewSuccessRate: Math.round(reviewSuccessRate * 100) / 100,

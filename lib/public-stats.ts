@@ -10,10 +10,14 @@ const publicTotal = (list: ByRepository) =>
 
 // Removes what only the viewer's own access reveals about another user: private repositories,
 // contributions to them and restricted contributions. The queries already ask for public repositories.
+// The calendar (and the streaks built from it) and the starred count have no public-only filter, so they go.
 // ponytail: totals count at most 100 repositories per year range (GitHub's maxRepositories cap).
 export function publicOnly(query: GitHubQuery, data: any) {
   const user = data?.user;
   if (!user) return data;
+
+  delete user.starredRepositories;
+  delete user.contributionsCollection?.contributionCalendar;
 
   if (query === 'repositories' || query === 'languages') {
     user.repositories.nodes = user.repositories.nodes.filter(

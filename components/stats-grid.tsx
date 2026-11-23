@@ -20,6 +20,7 @@ import {
   Code,
   Stars,
 } from "lucide-react";
+import { orHidden } from "@/lib/utils";
 
 interface StatsGridProps {
   user: GitHubUser;
@@ -63,7 +64,7 @@ export function StatsGrid({
     },
     {
       label: "Starred Repositories",
-      value: user.starredRepositories.totalCount,
+      value: orHidden(user.starredRepositories?.totalCount),
       icon: Stars,
     },
 
@@ -75,7 +76,7 @@ export function StatsGrid({
     },
     {
       label: "Total Commits",
-      value: stats.contributionCalendar.totalContributions,
+      value: orHidden(stats.contributionCalendar?.totalContributions),
       icon: GitCommit,
     },
     {
@@ -102,17 +103,17 @@ export function StatsGrid({
     // Engagement metrics
     {
       label: "Current Streak",
-      value: `${engagement.currentStreak} days`,
+      value: orHidden(engagement.currentStreak, " days"),
       icon: Trophy,
     },
     {
       label: "Longest Streak",
-      value: `${engagement.longestStreak} days`,
+      value: orHidden(engagement.longestStreak, " days"),
       icon: Trophy,
     },
     {
       label: "Total Streaks",
-      value: `${engagement.totalStreaks} days`,
+      value: orHidden(engagement.totalStreaks, " days"),
       icon: Trophy,
     },
     {
@@ -148,16 +149,24 @@ export function StatsGrid({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {items.map((item) => (
-        <Card key={item.label} className="p-4">
-          <div className="flex items-center space-x-2">
-            <item.icon className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">{item.label}</h3>
-          </div>
-          <p className="mt-2 text-2xl font-bold">{item.value}</p>
-        </Card>
-      ))}
-    </div>
+    <>
+      {!stats.contributionCalendar && (
+        <p className="text-sm text-muted-foreground">
+          Total commits, streaks and starred repositories are hidden for other
+          users. GitHub can include private activity in them.
+        </p>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {items.map((item) => (
+          <Card key={item.label} className="p-4">
+            <div className="flex items-center space-x-2">
+              <item.icon className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">{item.label}</h3>
+            </div>
+            <p className="mt-2 text-2xl font-bold">{item.value}</p>
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }

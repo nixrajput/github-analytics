@@ -152,6 +152,7 @@ The dashboard signs visitors in through a GitHub App, and every request to GitHu
 - A visitor who only signs in sees public data.
 - To include their own private repositories, a visitor installs the App on their account and chooses the repositories. The dashboard shows the **Include my private repositories** link for this.
 - Private data appears only in the visitor's own stats. For any other username, the app asks GitHub for public repositories only and removes private and restricted contribution counts. This holds even when the visitor can see that user's private repositories as a collaborator or organization member.
+- GitHub has no public-only filter for the contribution calendar, the streaks built from it, or the starred repositories count. For any other username, `/api/github` leaves these out, and the dashboard shows the Total Commits, streak and Starred Repositories cards as hidden.
 
 To create the App:
 

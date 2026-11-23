@@ -44,7 +44,7 @@ function getYearRanges(startDate: Date, endDate: Date): Array<[Date, Date]> {
   return ranges;
 }
 
-function mergeContributionData(contributions: any[]): any {
+export function mergeContributionData(contributions: any[]): any {
   return contributions.reduce(
     (merged, current) => ({
       totalCommitContributions:
@@ -66,25 +66,28 @@ function mergeContributionData(contributions: any[]): any {
       totalRepositoriesWithContributedCommits:
         (merged.totalRepositoriesWithContributedCommits || 0) +
         current.totalRepositoriesWithContributedCommits,
-      contributionCalendar: {
-        totalContributions:
-          (merged.contributionCalendar?.totalContributions || 0) +
-          current.contributionCalendar.totalContributions,
-        weeks: [
-          ...(merged.contributionCalendar?.weeks || []),
-          ...current.contributionCalendar.weeks,
-        ],
-      },
+      contributionCalendar:
+        current.contributionCalendar === undefined
+          ? undefined
+          : {
+              totalContributions:
+                (merged.contributionCalendar?.totalContributions || 0) +
+                current.contributionCalendar.totalContributions,
+              weeks: [
+                ...(merged.contributionCalendar?.weeks || []),
+                ...current.contributionCalendar.weeks,
+              ],
+            },
     }),
     {}
   );
 }
 
-function mergeEngagementData(engagements: any[]): any {
+export function mergeEngagementData(engagements: any[]): any {
   // Sort all contribution days for accurate streak calculation
   const allDays = engagements
     .flatMap((e) =>
-      e.contributionCalendar.weeks.flatMap((w: any) => w.contributionDays)
+      (e.contributionCalendar?.weeks ?? []).flatMap((w: any) => w.contributionDays)
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -97,9 +100,9 @@ function mergeEngagementData(engagements: any[]): any {
   const allIssues = engagements.flatMap((e) => e.issueContributions.nodes);
 
   return {
-    contributionCalendar: {
-      weeks: [{ contributionDays: allDays }],
-    },
+    contributionCalendar: engagements.every((e) => e.contributionCalendar)
+      ? { weeks: [{ contributionDays: allDays }] }
+      : undefined,
     pullRequestReviewContributions: {
       nodes: allReviews,
     },

@@ -36,7 +36,7 @@ export const GET_USER_PROFILE = `
       repositories(privacy: $privacy) {
         totalCount
       }
-      starredRepositories {
+      starredRepositories @include(if: $own) {
         totalCount
       }
       sponsors @include(if: $own) {
@@ -78,7 +78,7 @@ export const GET_USER_CONTRIBUTIONS = `
             repository { isPrivate }
           }
         }
-        contributionCalendar {
+        contributionCalendar @include(if: $own) {
           totalContributions
           colors
           isHalloween
@@ -166,10 +166,10 @@ export const GET_USER_REPOSITORIES = `
 `;
 
 export const GET_USER_ENGAGEMENT = `
-  query GetUserEngagement($username: String!, $from: DateTime!) {
+  query GetUserEngagement($username: String!, $from: DateTime!, $own: Boolean!) {
     user(login: $username) {
       contributionsCollection(from: $from) {
-        contributionCalendar {
+        contributionCalendar @include(if: $own) {
           totalContributions
           weeks {
             contributionDays {
