@@ -50,7 +50,7 @@ GitHub Analytics Dashboard is a web application that provides insights into your
 - Responsive design for mobile, tablet, and desktop devices.
 - Dark mode support for reduced eye strain.
 - Easy customization of content and images.
-- Simple deployment to hosting services like Vercel, Netlify, and GitHub Pages.
+- Simple deployment to Vercel, Netlify or any host that runs a Next.js server.
 - Open-source license for personal and commercial use.
 - Regular updates and new features.
 
@@ -113,17 +113,12 @@ You need to have the following software installed on your computer:
 
    ```env
    NEXT_PUBLIC_GITHUB_USERNAME=your-github-username
-   NEXT_PUBLIC_GITHUB_TOKEN=your-github-access-token
-   NEXT_PUBLIC_EMAIL_USERNAME=your-email-username
-   NEXT_PUBLIC_EMAIL_PASSWORD=your-email-password
-   NEXT_PUBLIC_EMAIL_HOST=your-email-host
-   NEXT_PUBLIC_EMAIL_PORT=your-email-port
-   NEXT_PUBLIC_EMAIL_SECURE=your-email-secure
-   NEXT_PUBLIC_EMAIL_FROM=your-email-from
-   NEXT_PUBLIC_EMAIL_TO=your-email-to
+   GITHUB_TOKEN=your-github-access-token
    ```
 
-   Replace the placeholder values with your GitHub username, GitHub access token, email credentials, and email addresses. You can create a GitHub access token by following the instructions in the [GitHub documentation](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
+   Replace the placeholder values with your GitHub username and a GitHub access token. You can create a token by following the instructions in the [GitHub documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Use a fine-grained token with read-only access to public repositories: the dashboard shows data for any username, so a token that can read private repositories also shows them.
+
+   Only the server reads `GITHUB_TOKEN` (in `app/api/github/route.ts`). Never give it a `NEXT_PUBLIC_` prefix: Next.js copies every `NEXT_PUBLIC_` variable into the JavaScript that it sends to the browser.
 
 - To start the development server and view the website locally, run the following command:
 
@@ -141,9 +136,9 @@ You need to have the following software installed on your computer:
 
 ## Deployment
 
-To deploy the portfolio website to a hosting service of your choice, follow the deployment instructions for Next.js applications. Some popular hosting options include Vercel, Netlify, and GitHub Pages.
+To deploy the dashboard to a hosting service of your choice, follow the deployment instructions for Next.js applications. The dashboard calls GitHub through its own API route, so it needs a host that runs a Next.js server, such as Vercel or Netlify. Static hosts such as GitHub Pages do not work.
 
-Remember to configure environment variables for sensitive information like email credentials if needed.
+Set `GITHUB_TOKEN` (and optionally `NEXT_PUBLIC_GITHUB_USERNAME`) in the host's environment variable settings.
 
 ## Contributing
 

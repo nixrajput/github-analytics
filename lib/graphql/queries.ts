@@ -237,3 +237,13 @@ export const GET_USER_LANGUAGES = `
     }
   }
 `;
+
+export const QUERIES = {
+  profile: GET_USER_PROFILE,
+  contributions: GET_USER_CONTRIBUTIONS,
+  repositories: GET_USER_REPOSITORIES,
+  engagement: GET_USER_ENGAGEMENT,
+  languages: GET_USER_LANGUAGES,
+};
+
+export type GitHubQuery = keyof typeof QUERIES;

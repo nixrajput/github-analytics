@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { graphqlClient } from "../lib/graphql/client";
-import {
-  GET_USER_PROFILE,
-  GET_USER_CONTRIBUTIONS,
-  GET_USER_REPOSITORIES,
-  GET_USER_LANGUAGES,
-  GET_USER_ENGAGEMENT,
-} from "../lib/graphql/queries";
+import type { GitHubQuery } from "../lib/graphql/queries";
 import {
   transformUserProfile,
   transformContributionStats,
@@ -16,6 +9,22 @@ import {
   transformEngagement,
 } from "../lib/transform";
 import type { GitHubStats } from "../lib/types";
+
+async function githubQuery(
+  query: GitHubQuery,
+  variables: Record<string, string>
+): Promise<any> {
+  const response = await fetch("/api/github", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query, ...variables }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error ?? `Request failed (${response.status})`);
+  }
+  return body;
+}
 
 function getYearRanges(startDate: Date, endDate: Date): Array<[Date, Date]> {
   const ranges: Array<[Date, Date]> = [];
@@ -111,10 +120,9 @@ export function useGitHubData(
 
       try {
         // First fetch user profile to get account creation date
-        const profileResponse: any = await graphqlClient.request(
-          GET_USER_PROFILE,
-          { username }
-        );
+        const profileResponse: any = await githubQuery("profile", {
+          username,
+        });
 
         const today = new Date();
         const startDate =
@@ -128,19 +136,11 @@ export function useGitHubData(
         // Fetch profile and repositories (not time-dependent)
         const [profile, repositories, languages] = await Promise.all([
           Promise.resolve(transformUserProfile(profileResponse.user)),
-          graphqlClient
-            .request(GET_USER_REPOSITORIES, {
-              username,
-              first: 100,
-            })
+          githubQuery("repositories", { username })
             .then(({ user }: any) =>
               transformRepositories(user.repositories.nodes)
             ),
-          graphqlClient
-            .request(GET_USER_LANGUAGES, {
-              username,
-              first: 100,
-            })
+          githubQuery("languages", { username })
             .then(({ user }: any) =>
               transformLanguageStats(user.repositories.nodes)
             ),
@@ -148,23 +148,19 @@ export function useGitHubData(
 
         // Fetch contributions and engagement data for each year range
         const contributionsPromises = dateRanges.map(([from, to]) =>
-          graphqlClient
-            .request(GET_USER_CONTRIBUTIONS, {
-              username,
-              from: from.toISOString(),
-              to: to.toISOString(),
-            })
-            .then(({ user }: any) => user.contributionsCollection)
+          githubQuery("contributions", {
+            username,
+            from: from.toISOString(),
+            to: to.toISOString(),
+          }).then(({ user }: any) => user.contributionsCollection)
         );
 
         const engagementPromises = dateRanges.map(([from, to]) =>
-          graphqlClient
-            .request(GET_USER_ENGAGEMENT, {
-              username,
-              from: from.toISOString(),
-              to: to.toISOString(),
-            })
-            .then(({ user }: any) => user.contributionsCollection)
+          githubQuery("engagement", {
+            username,
+            from: from.toISOString(),
+            to: to.toISOString(),
+          }).then(({ user }: any) => user.contributionsCollection)
         );
 
         // Wait for all data to be fetched
